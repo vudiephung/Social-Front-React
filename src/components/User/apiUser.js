@@ -26,21 +26,21 @@ export const remove = async () => {
   return data;
 };
 
-export const uploadAvatar = async user => {
-  const currentJWT = JSON.parse(localStorage.getItem("jwt")).token;
-  const response = await fetch(
-    `${process.env.REACT_APP_API_URL}/users/me/avatar`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + currentJWT
-      },
-      body: user
-    }
-  );
-  const data = await response.json();
-  return data;
-};
+// export const uploadAvatar = async user => {
+//   const currentJWT = JSON.parse(localStorage.getItem("jwt")).token;
+//   const response = await fetch(
+//     `${process.env.REACT_APP_API_URL}/users/me/avatar`,
+//     {
+//       method: "POST",
+//       headers: {
+//         Authorization: "Bearer " + currentJWT
+//       },
+//       body: user
+//     }
+//   );
+//   const data = await response.json();
+//   return data;
+// };
 
 export const updateUser = async user => {
   const currentJWT = JSON.parse(localStorage.getItem("jwt")).token;
@@ -54,6 +54,7 @@ export const updateUser = async user => {
     body: JSON.stringify(user)
   });
   const data = await response.json();
+  console.log("from updateuser", data);
   return data;
 };
 

@@ -45,9 +45,7 @@ class SinglePost extends React.Component {
   };
 
   renderImg = post => {
-    const photoURL = post._id
-      ? `${process.env.REACT_APP_API_URL}/posts/photo/${post._id}`
-      : defaultPhoto;
+    const photoURL = post.mediaUrl ? post.mediaUrl : defaultPhoto;
     return (
       <img
         src={photoURL}

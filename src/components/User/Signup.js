@@ -3,7 +3,15 @@ import { signup } from "../auth";
 import { Link } from "react-router-dom";
 
 class Signup extends React.Component {
-  state = { name: "", email: "", password: "", error: "", open: false };
+  state = {
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    error: "",
+    open: false,
+    loading: false
+  };
 
   onInputChange = name => e => {
     this.setState({ [name]: e.target.value });
@@ -12,8 +20,10 @@ class Signup extends React.Component {
   onClickSubmit = e => {
     e.preventDefault();
     //send to back-end
+    this.setState({ open: false });
     const { name, email, password, confirmPassword } = this.state;
     const userObj = { name, email, password, confirmPassword };
+    this.setState({ loading: true });
     signup(userObj).then(data => {
       if (data.error) this.setState({ error: data.error });
       else
@@ -21,10 +31,12 @@ class Signup extends React.Component {
           name: "",
           email: "",
           password: "",
+          confirmPassword: "",
           open: true,
           error: ""
         });
     });
+    this.setState({ loading: false });
   };
 
   render() {
@@ -87,7 +99,9 @@ class Signup extends React.Component {
 
           <button
             onClick={this.onClickSubmit}
-            className="btn btn-raised btn-primary"
+            className={`ui ${
+              this.state.loading ? "disabled loading" : ""
+            } teal button`}
           >
             Submit
           </button>

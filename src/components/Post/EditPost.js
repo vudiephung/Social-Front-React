@@ -1,98 +1,102 @@
 import React from "react";
-import { getPostById, update, uploadPhoto } from "./apiPost";
+import { getPostById, update } from "./apiPost";
 import { Redirect } from "react-router-dom";
 import DefaultPhoto from "../img/post.jpg";
+import axios from "axios";
 
 class EditPost extends React.Component {
   state = {
     _id: "",
     title: "",
     body: "",
+    mediaPreview: "",
+    media: "",
+    mediaUrl: "",
     error: null,
-    photo: null,
     Redirect: false,
     loading: false
   };
 
   onInputChange = name => e => {
-    const value = e.target.value;
-    this.setState({ [name]: value });
+    const { value, files } = e.target;
+    if (name === "photo") {
+      this.setState({
+        media: files[0],
+        mediaPreview: window.URL.createObjectURL(files[0])
+      });
+    } else this.setState({ [name]: value });
   };
 
   renderImg = () => {
-    const photoURL = `${process.env.REACT_APP_API_URL}/posts/photo/${this.state._id}`;
-    //const photoURL = `data:image/png;base64,${this.state.avatar.data}`;
+    const imgUrl = this.state.mediaPreview
+      ? this.state.mediaPreview
+      : this.state.mediaUrl;
     return (
       <img
-        id="photoImg"
-        src={photoURL}
+        src={imgUrl}
         onError={img => (img.target.src = `${DefaultPhoto}`)}
-        alt={this.state.name}
-        style={{ height: "200px", width: "auto" }}
-        className="img-thumbnail"
+        alt={this.state.title}
+        style={{ height: "300px", width: "auto" }}
+        className="img-thumbnail mb-2"
       />
     );
   };
 
-  onUploadImg = e => {
-    const value = e.target.files[0];
-    this.postData.set("photo", value);
-
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-      //console.log(e);
-      document.querySelector("#photoImg").setAttribute("src", e.target.result);
-    };
-
-    reader.readAsDataURL(value);
-  };
-
-  onSubmitImg = async e => {
-    e.preventDefault();
-    this.setState({ loading: true });
-    const data = await uploadPhoto(this.postData, this.state._id);
-    this.setState({ loading: false });
-    if (data.error) this.setState({ error: data.error.errmsg });
+  onSubmitImg = async () => {
+    if (this.state.media) {
+      const data = new FormData();
+      data.append("file", this.state.media);
+      data.append("upload_preset", "hung-social");
+      data.append("cloud_name", "hung-vu");
+      const response = await axios.post(
+        process.env.REACT_APP_CLOUDINARY_URL,
+        data
+      );
+      console.log(response.data);
+      const mediaUrl = response.data.url;
+      return mediaUrl;
+    } else {
+      console.log("no media in state");
+      return;
+    }
   };
 
   onClickSubmit = async e => {
     e.preventDefault();
     this.setState({ loading: true });
     const { _id, title, body } = this.state;
+    const mediaUrl = await this.onSubmitImg();
     if (title === "" || body === "") {
       return this.setState({
         loading: false,
         error: "Title and Body must be provided!"
       });
     }
-    const updateObj = { title: title.trim(), body: body.trim() };
+    const updateObj = { title: title.trim(), body: body.trim(), mediaUrl };
     //console.log(updateObj, _id);
     const response = await update(_id, updateObj);
-    //console.log(response);
     this.setState({ loading: false });
     if (response.error) this.setState({ error: response.error });
     else this.setState({ Redirect: true });
   };
 
-  renderLoading = () => {
-    if (this.state.loading) {
-      return (
-        <div className="jumbotron text-center">
-          <h2>Loading...</h2>
-        </div>
-      );
-    }
-    return <div></div>;
-  };
+  // renderLoading = () => {
+  //   if (this.state.loading) {
+  //     return (
+  //       <div className="jumbotron text-center">
+  //         <h2>Loading...</h2>
+  //       </div>
+  //     );
+  //   }
+  //   return <div></div>;
+  // };
 
   async componentDidMount() {
     const post = await getPostById(this.props.match.params.postId);
-    this.postData = new FormData();
     if (post.error) return this.setState({ error: post.error.errmsg });
     else {
-      const { _id, title, body } = post;
-      this.setState({ _id, title, body });
+      const { _id, title, body, mediaUrl } = post;
+      this.setState({ _id, title, body, mediaUrl });
     }
   }
 
@@ -100,7 +104,10 @@ class EditPost extends React.Component {
     if (this.state.Redirect) return <Redirect to={`/`} />;
     return (
       <div className="container">
-        <h2 className="mt-5 mb-5">Edit Your Post</h2>
+        <h2 className="mt-5 mb-5 ui header">
+          <i className="edit icon" />
+          Edit Your Post
+        </h2>
 
         <div
           className="alert alert-danger"
@@ -109,28 +116,16 @@ class EditPost extends React.Component {
           {this.state.error}
         </div>
 
-        {this.renderLoading()}
         {this.renderImg()}
 
-        <form action="/" method="POST" enctype="multipart/form-data">
-          <input
-            id="imgInp"
-            type="file"
-            name="avatar"
-            onChange={this.onUploadImg}
-            accept="image/x-png,image/jpg,image/jpeg"
-          />
-          <div>
-            <button
-              onClick={this.onSubmitImg}
-              className="btn btn-raised btn-primary mt-2"
-            >
-              Upload Photo
-            </button>
-          </div>
-        </form>
-
         <form>
+          <input
+            style={{ marginBottom: "1em" }}
+            type="file"
+            name="photo"
+            onChange={this.onInputChange("photo")}
+            accept="image/*"
+          />
           <div className="form-group">
             <label className="text-muted">Titlte</label>
             <input
@@ -151,7 +146,9 @@ class EditPost extends React.Component {
 
           <button
             onClick={this.onClickSubmit}
-            className="btn btn-raised btn-primary"
+            className={`ui ${
+              this.state.loading ? "disabled loading" : ""
+            } teal button`}
           >
             Update
           </button>

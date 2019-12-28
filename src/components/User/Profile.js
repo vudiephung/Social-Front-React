@@ -15,6 +15,7 @@ class Profile extends React.Component {
     isFollowThisUser: false,
     followings: [],
     followers: [],
+    avatar: "",
     posts: [],
     error: ""
   };
@@ -89,22 +90,28 @@ class Profile extends React.Component {
   };
 
   renderImg = () => {
-    const avatarURL = `${process.env.REACT_APP_API_URL}/users/${this.state.user._id}/avatar`;
+    const photoUrl = this.state.user.avatar
+      ? this.state.user.avatar
+      : defaultAvatar;
     return (
       <img
-        src={avatarURL}
+        src={photoUrl}
         onError={img => (img.target.src = `${defaultAvatar}`)}
         alt={this.state.user.name}
-        className="card-img-top col-md-6 mt-5 mb-5 img-thumbnail"
+        className="ui left floated image circular avatar"
         alt={this.state.user.name}
-        style={{ width: "auto", height: "25vw", objectFit: "cover" }}
+        style={{
+          width: "auto",
+          height: "40vw",
+          objectFit: "cover",
+          marginTop: "2em"
+        }}
       />
     );
   };
 
   render() {
     if (this.state.reDirectToLogin) return <Redirect to="/" />;
-    console.log(this.state.user);
 
     const { name, email } = this.state.user;
     return (

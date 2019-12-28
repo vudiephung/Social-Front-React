@@ -31,16 +31,16 @@ class Signin extends React.Component {
     });
   };
 
-  renderLoading = () => {
-    if (this.state.loading === true) {
-      return (
-        <div className="jumbotron text-center">
-          <h2>Loading...</h2>
-        </div>
-      );
-    }
-    return "";
-  };
+  // renderLoading = () => {
+  //   if (this.state.loading === true) {
+  //     return (
+  //       <div className="jumbotron text-center">
+  //         <h2>Loading...</h2>
+  //       </div>
+  //     );
+  //   }
+  //   return "";
+  // };
 
   render() {
     if (this.state.redirectToReferer) {
@@ -58,7 +58,7 @@ class Signin extends React.Component {
           {this.state.error}
         </div>
 
-        {this.renderLoading()}
+        {/* {this.renderLoading()} */}
 
         <form>
           <div className="form-group">
@@ -82,7 +82,9 @@ class Signin extends React.Component {
 
           <button
             onClick={this.onClickSubmit}
-            className="btn btn-raised btn-primary"
+            className={`ui ${
+              this.state.loading ? "disabled loading" : ""
+            } teal button`}
           >
             Sign In
           </button>

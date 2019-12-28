@@ -1,7 +1,8 @@
 import React from "react";
-import { fetchUserById, updateUser, uploadAvatar } from "./apiUser";
+import { fetchUserById, updateUser } from "./apiUser";
 import { Redirect } from "react-router-dom";
 import defaultAvatar from "../img/avatar.jpg";
+import axios from "axios";
 
 class EditUser extends React.Component {
   state = {
@@ -10,54 +11,58 @@ class EditUser extends React.Component {
     about: "",
     error: "",
     avatar: "",
+    media: "",
+    mediaPreview: "",
     reDirectToProfile: false,
     loading: false
   };
 
-  renderLoading = () => {
-    if (this.state.loading) {
-      return (
-        <div className="jumbotron text-center">
-          <h2>Loading...</h2>
-        </div>
-      );
-    }
-    return "";
-  };
+  // renderLoading = () => {
+  //   if (this.state.loading) {
+  //     return (
+  //       <div className="jumbotron text-center">
+  //         <h2>Loading...</h2>
+  //       </div>
+  //     );
+  //   }
+  //   return "";
+  // };
 
   renderImg = () => {
-    const avatarURL = `${process.env.REACT_APP_API_URL}/users/${this.state._id}/avatar`;
-    //const avatarURL = `data:image/png;base64,${this.state.avatar.data}`;
+    const avatarUrl = this.state.mediaPreview
+      ? this.state.mediaPreview
+      : this.state.avatar;
+    //console.log("avatar url", avatarUrl);
     return (
       <img
-        id="avatarImg"
-        src={avatarURL}
+        src={avatarUrl}
         onError={img => (img.target.src = `${defaultAvatar}`)}
-        alt={this.state.name}
-        style={{ height: "200px", width: "auto" }}
-        className="img-thumbnail"
+        alt={this.state.title}
+        style={{ height: "300px", width: "auto" }}
+        className="img-thumbnail mb-2"
       />
     );
   };
 
-  onUploadImg = e => {
-    const value = e.target.files[0];
-    this.userData.set("avatar", value);
+  // onUploadImg = e => {
+  //   const value = e.target.files[0];
+  //   this.userData.set("avatar", value);
 
-    const reader = new FileReader();
+  //   const reader = new FileReader();
 
-    reader.onload = function(e) {
-      //console.log(e);
-      document.querySelector("#avatarImg").setAttribute("src", e.target.result);
-    };
+  //   reader.onload = function(e) {
+  //     //console.log(e);
+  //     document.querySelector("#avatarImg").setAttribute("src", e.target.result);
+  //   };
 
-    reader.readAsDataURL(value);
-  };
+  //   reader.readAsDataURL(value);
+  // };
 
   onClickSubmit = async e => {
     e.preventDefault();
     this.setState({ loading: true });
     const { name, about } = this.state;
+    const avatar = await this.onSubmitImg();
     if (name === "") {
       return this.setState({
         loading: false,
@@ -65,7 +70,7 @@ class EditUser extends React.Component {
       });
     }
     this.setState({ error: "" });
-    const userObj = { name: name.trim(), about: about.trim() };
+    const userObj = { name: name.trim(), about: about.trim(), avatar };
     const data = await updateUser(userObj);
     this.setState({ loading: false });
     if (data.error) {
@@ -74,21 +79,36 @@ class EditUser extends React.Component {
   };
 
   onInputChange = name => e => {
-    const value = e.target.value;
-    this.setState({ [name]: value });
+    const { value, files } = e.target;
+    if (name === "avatar") {
+      this.setState({
+        media: files[0],
+        mediaPreview: window.URL.createObjectURL(files[0])
+      });
+    } else this.setState({ [name]: value });
   };
 
-  onSubmitImg = async e => {
-    e.preventDefault();
-    this.setState({ loading: true });
-    const data = await uploadAvatar(this.userData);
-    this.setState({ loading: false });
-    if (data.error) this.setState({ error: data.error.errmsg });
+  onSubmitImg = async () => {
+    if (this.state.media) {
+      const data = new FormData();
+      data.append("file", this.state.media);
+      data.append("upload_preset", "hung-social");
+      data.append("cloud_name", "hung-vu");
+      const response = await axios.post(
+        process.env.REACT_APP_CLOUDINARY_URL,
+        data
+      );
+      const mediaUrl = response.data.url;
+      return mediaUrl;
+    } else {
+      console.log("no media in state");
+      return;
+    }
   };
 
   async componentDidMount() {
     const user = await fetchUserById(this.props.match.params.userId);
-    this.userData = new FormData();
+    console.log("from componentdidmoung", user);
     if (user.error) this.setState({ error: user.error.errmsg });
     else {
       const { _id, name, email, about, avatar } = user;
@@ -112,28 +132,17 @@ class EditUser extends React.Component {
           {this.state.error}
         </div>
 
-        {this.renderLoading()}
         {this.renderImg()}
 
-        <form action="/" method="POST" enctype="multipart/form-data">
+        <form>
           <input
-            id="imgInp"
             type="file"
             name="avatar"
-            onChange={this.onUploadImg}
-            accept="image/x-png,image/jpg,image/jpeg"
+            onChange={this.onInputChange("avatar")}
+            accept="image/*"
+            style={{ marginBottom: "1rem" }}
           />
-          <div>
-            <button
-              onClick={this.onSubmitImg}
-              className="btn btn-raised btn-primary mt-2"
-            >
-              Update Your Avatar
-            </button>
-          </div>
-        </form>
 
-        <form>
           <div className="form-group">
             <label className="text-muted">Name</label>
             <input
@@ -154,7 +163,9 @@ class EditUser extends React.Component {
 
           <button
             onClick={this.onClickSubmit}
-            className="btn btn-raised btn-primary"
+            className={`ui ${
+              this.state.loading ? "disabled loading" : ""
+            } teal button`}
           >
             Update
           </button>

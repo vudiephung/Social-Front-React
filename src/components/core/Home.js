@@ -6,8 +6,7 @@ class Home extends React.Component {
     return (
       <div>
         <div className="jumbotron">
-          <h2>Home</h2>
-          Welcome to React Frontend
+          <h2>Recent Posts</h2>
         </div>
         <Posts />
       </div>
