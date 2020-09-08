@@ -126,7 +126,7 @@ class CreatePost extends React.Component {
       const data = new FormData();
       data.append("file", this.state.media);
       data.append("upload_preset", "hung-social");
-      data.append("cloud_name", "hung-vu");
+      data.append("api_key", process.env.REACT_APP_CLOUDINARY_API_KEY);
       const response = await axios.post(
         process.env.REACT_APP_CLOUDINARY_URL,
         data

@@ -7,6 +7,7 @@ export const signup = userObj => {
     },
     body: JSON.stringify(userObj)
   }).then(res => {
+    console.log(res)
     return res.json();
   });
 };

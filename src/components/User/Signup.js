@@ -25,6 +25,7 @@ class Signup extends React.Component {
     const userObj = { name, email, password, confirmPassword };
     this.setState({ loading: true });
     signup(userObj).then(data => {
+      console.log(data)
       if (data.error) this.setState({ error: data.error });
       else
         this.setState({

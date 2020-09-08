@@ -44,24 +44,10 @@ class EditUser extends React.Component {
     );
   };
 
-  // onUploadImg = e => {
-  //   const value = e.target.files[0];
-  //   this.userData.set("avatar", value);
-
-  //   const reader = new FileReader();
-
-  //   reader.onload = function(e) {
-  //     //console.log(e);
-  //     document.querySelector("#avatarImg").setAttribute("src", e.target.result);
-  //   };
-
-  //   reader.readAsDataURL(value);
-  // };
-
   onClickSubmit = async e => {
     e.preventDefault();
     this.setState({ loading: true });
-    const { name, about } = this.state;
+    let { name, about } = this.state;
     const avatar = await this.onSubmitImg();
     if (name === "") {
       return this.setState({
@@ -69,6 +55,7 @@ class EditUser extends React.Component {
         error: "Your name must me provided!"
       });
     }
+    about = about ? about : ""
     this.setState({ error: "" });
     const userObj = { name: name.trim(), about: about.trim(), avatar };
     const data = await updateUser(userObj);
@@ -94,6 +81,7 @@ class EditUser extends React.Component {
       data.append("file", this.state.media);
       data.append("upload_preset", "hung-social");
       data.append("cloud_name", "hung-vu");
+      data.append("api_key", process.env.REACT_APP_CLOUDINARY_API_KEY);
       const response = await axios.post(
         process.env.REACT_APP_CLOUDINARY_URL,
         data
@@ -108,7 +96,6 @@ class EditUser extends React.Component {
 
   async componentDidMount() {
     const user = await fetchUserById(this.props.match.params.userId);
-    console.log("from componentdidmoung", user);
     if (user.error) this.setState({ error: user.error.errmsg });
     else {
       const { _id, name, email, about, avatar } = user;
@@ -117,8 +104,6 @@ class EditUser extends React.Component {
   }
 
   render() {
-    // if (this.state.reDirect)
-    //   return <Link to={`/users/edit/${this.state._id}`}></Link>;
     if (this.state.reDirectToProfile)
       return <Redirect to={`/${this.state._id}`}></Redirect>;
     return (
